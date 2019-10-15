@@ -60,6 +60,9 @@ int server_epoll_create(int sockfd)
 	struct epoll_event sockEvent;
 	struct epoll_event rvEvent[MAXEVENT];
 
+	/*初始化*/
+	memset(&client_addr,0,sizeof(client_addr));
+	memset(readBuff,0,sizeof(readBuff));
 	/*创建epoll文件描述符，相当于向内核申请一个文件系统*/
 	epollfd = epoll_create(FDNUM);
 	if(epollfd < 0)
@@ -87,12 +90,10 @@ int server_epoll_create(int sockfd)
 		return -1;
 	}
 
+	printf("Waiting for client connecting...\n");
 	while(1)
 	{
 		/*等待客户端连接*/
-
-		printf("Waiting for client connecting...\n");
-
 		/*等待事件触发*/
 		rvwait = epoll_wait(epollfd,rvEvent,MAXEVENT,-1);//-1:永远阻塞直到有文件描述被触发时返回		
 		if(rvwait < 0)
@@ -118,7 +119,7 @@ int server_epoll_create(int sockfd)
 					}
 					else
 					{
-						printf("client[%s:%d] connecting successfully!",inet_ntoa(client_addr.sin_addr),client_addr.sin_port);
+						printf("client[%s:%u] connecting successfully!\n",inet_ntoa(client_addr.sin_addr),ntohs(client_addr.sin_port));
 					}
 
 					if(setnonblocking(connectfd) < 0)//将新连接设置为非组塞状态
@@ -134,17 +135,33 @@ int server_epoll_create(int sockfd)
 				{
 					if(rvEvent[i].events & EPOLLIN)//接收到数据，读socket
 					{
-						if((rv = readData(rvEvent[i].data.fd,readBuff)) < 0)
+						/*
+						readData(rvEvent[i].data.fd,readBuff);//从文件描述符中读数据
+
+						printf("read from [%d] %d bytes\n",rv);
+			
+						writeData(rvEvent[i].data.fd,"server received data successfully!\n");//响应客户端
+						*/
+						if(rvEvent[i].data.fd < 0)
 						{
-							printf("readData error!\n");
-							close(rvEvent[i].data.fd);
-							return -1;
+							continue;
 						}
 
-						else
+						rv = recv(rvEvent[i].data.fd,readBuff,BUFSIZE -1,0);
+						if(rv > 0)
 						{
-							printf("read from [%d] %d bytes\n",rv);
-						}				
+							printf("readBuff:%s\n",readBuff);
+						}
+						else if(rv == 0)
+						{
+							printf("client disconnected!\n");
+							close(rvEvent[i].data.fd);
+						}
+						else if(rv < 0)
+						{
+							printf("server read from client[%d] data appearing error:%s\n",rvEvent[i].data.fd,strerror(errno));
+							close(rvEvent[i].data.fd);
+						}
 					}
 				}
 			}
@@ -197,7 +214,7 @@ int readData(int fd,char *buf)
 		close(fd);
 		return -1;
 	}
-	return rv;
+
 }
 
 int writeData(int fd,char *buf)
@@ -222,5 +239,4 @@ int writeData(int fd,char *buf)
 
 		n -= rv;
 	}
-	return 0;
 }
