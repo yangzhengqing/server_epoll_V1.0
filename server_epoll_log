@@ -1,0 +1,22 @@
+welcom use server epoll...
+strP=5555
+sockFd value:4
+port = 5555
+server_addr.sin_port value :45845
+socketInit strI = \
+server_addr.sin_addr.s_addr:0
+bind ip port successfuly
+Waiting for client connecting...
+client[127.0.0.1:39127][6] connecting successfully!
+server receive from client[6] datas:28-041731f7c0ff 19.187℃ 08:00:00 AM
+server send successfully!
+server receive from client[6] datas:28-041731f7c0ff 19.187℃ 08:00:00 AM
+server send successfully!
+server receive from client[6] datas:28-041731f7c0ff 19.187℃ 08:00:00 AM
+server send successfully!
+server receive from client[6] datas:28-041731f7c0ff 19.187℃ 08:00:00 AM
+server send successfully!
+server receive from client[6] datas:28-041731f7c0ff 19.187℃ 08:00:00 AM
+server send successfully!
+client[6] disconnected!
+server send failed:Bad file descriptor
